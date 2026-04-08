@@ -1,0 +1,392 @@
+/* =============================================================
+   HAMSTER POWER PLANT — 8-bit stylesheet
+   Uses "Press Start 2P" (Google Fonts) for the pixel-font look.
+   All borders are sharp (no border-radius except the wheel).
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* ── Variables ─────────────────────────────────────────────── */
+:root {
+  --bg:           #080810;
+  --bg-card:      #0c0c18;
+  --bg-cage:      #050508;
+  --border-idle:  #3a3a5a;
+  --border-work:  #00aa55;
+  --border-xhst:  #aa2222;
+  --col-energy:   #ffd700;
+  --col-work:     #00ff88;
+  --col-exhaust:  #ff4444;
+  --col-idle:     #7777aa;
+  --col-food:     #ff8800;
+  --col-water:    #2299ff;
+  --font:         'Press Start 2P', monospace;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 10px;
+  background: var(--bg);
+  color: #bbb;
+  min-height: 100vh;
+  padding: 16px;
+  image-rendering: pixelated;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+header {
+  text-align: center;
+  padding: 16px 20px 20px;
+  background: var(--bg-card);
+  border: 4px solid var(--border-idle);
+  box-shadow: 4px 4px 0 #000;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 13px;
+  color: var(--col-energy);
+  text-shadow: 3px 3px 0 #7a5900;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 6px;
+  color: #555577;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+/* ── Energy display ────────────────────────────────────────── */
+#energy-bar {
+  margin-bottom: 16px;
+}
+
+#energy-bar .label {
+  font-size: 8px;
+  color: #666;
+  margin-right: 6px;
+}
+
+#energy-count {
+  font-size: 22px;
+  color: var(--col-energy);
+  text-shadow: 0 0 12px rgba(255,215,0,0.4);
+}
+
+#energy-bar .unit {
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+/* ── Shop ──────────────────────────────────────────────────── */
+#shop {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons (shared) ──────────────────────────────────────── */
+button {
+  font-family: var(--font);
+  font-size: 7px;
+  line-height: 1.6;
+  padding: 8px 12px;
+  background: #16162a;
+  color: #999;
+  cursor: pointer;
+  border: none;
+  outline: 3px solid #444466;
+  box-shadow: 3px 3px 0 #000;
+  transition: none;
+  image-rendering: pixelated;
+}
+
+button:hover:not(:disabled) {
+  background: #202038;
+  color: #fff;
+  outline-color: #8888cc;
+}
+
+button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Automater toggle — lit up when ON */
+#toggle-automater-btn[data-active="true"] {
+  background: #081a10;
+  color: var(--col-work);
+  outline-color: var(--col-work);
+  box-shadow: 3px 3px 0 #000, 0 0 10px rgba(0,255,136,0.25);
+}
+
+/* ── Utility ───────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── Hamster grid ──────────────────────────────────────────── */
+#hamster-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* ── Hamster card ──────────────────────────────────────────── */
+.hamster-card {
+  width: 200px;
+  background: var(--bg-card);
+  border: 4px solid var(--border-idle);
+  padding: 10px;
+  box-shadow: 4px 4px 0 #000;
+  position: relative; /* needed for energy-pop positioning */
+  transition: border-color 0.05s step-start, box-shadow 0.05s step-start;
+}
+
+.hamster-card[data-state="working"] {
+  border-color: var(--border-work);
+  box-shadow: 4px 4px 0 #000, 0 0 14px rgba(0,170,85,0.35);
+}
+
+.hamster-card[data-state="exhausted"] {
+  border-color: var(--border-xhst);
+  box-shadow: 4px 4px 0 #000, 0 0 14px rgba(170,34,34,0.35);
+}
+
+/* ── Card header ───────────────────────────────────────────── */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.hamster-name {
+  font-size: 6px;
+  color: #555577;
+}
+
+.state-badge {
+  font-size: 6px;
+  padding: 2px 4px;
+}
+
+.state-badge[data-state="idle"]      { color: var(--col-idle);    background: #12121e; }
+.state-badge[data-state="working"]   { color: var(--col-work);    background: #081408; }
+.state-badge[data-state="exhausted"] {
+  color: var(--col-exhaust);
+  background: #180808;
+  animation: blink 0.7s step-start infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* ── Cage ──────────────────────────────────────────────────── */
+.cage {
+  position: relative;
+  width: 100%;
+  height: 88px;
+  background: var(--bg-cage);
+  /* Vertical bars */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px, transparent 14px,
+    rgba(80,80,130,0.14) 14px, rgba(80,80,130,0.14) 16px
+  );
+  border: 3px solid #222233;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+/* Scanlines */
+.cage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0px, transparent 1px,
+    rgba(0,0,0,0.18) 1px, rgba(0,0,0,0.18) 2px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Wheel ─────────────────────────────────────────────────── */
+.wheel {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid #2a2a44;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Cross spokes */
+.wheel::before,
+.wheel::after {
+  content: '';
+  position: absolute;
+  background: #2a2a44;
+}
+.wheel::before {
+  width: 3px;
+  height: 100%;
+  top: 0;
+  left: calc(50% - 1.5px);
+}
+.wheel::after {
+  width: 100%;
+  height: 3px;
+  top: calc(50% - 1.5px);
+  left: 0;
+}
+
+/* Working: wheel lights up and spins */
+.hamster-card[data-state="working"] .wheel {
+  border-color: var(--border-work);
+  animation: spin 0.55s linear infinite;
+}
+.hamster-card[data-state="working"] .wheel::before,
+.hamster-card[data-state="working"] .wheel::after {
+  background: var(--border-work);
+}
+
+@keyframes spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ── Hamster emoji ─────────────────────────────────────────── */
+.hamster-emoji {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  line-height: 1;
+  z-index: 5;
+}
+
+/* Subtle bounce when working */
+.hamster-card[data-state="working"] .hamster-emoji {
+  animation: run 0.18s steps(2) infinite;
+}
+
+/* Greyed out when exhausted */
+.hamster-card[data-state="exhausted"] .hamster-emoji {
+  filter: grayscale(1) brightness(0.55);
+}
+
+@keyframes run {
+  0%   { transform: translate(-50%, -53%); }
+  50%  { transform: translate(-50%, -47%); }
+  100% { transform: translate(-50%, -53%); }
+}
+
+/* ── Stamina meters ────────────────────────────────────────── */
+.meters {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meter-icon {
+  font-size: 12px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.meter-bar {
+  flex: 1;
+  height: 10px;
+  background: #0a0a12;
+  border: 2px solid #222233;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width 0.15s step-start;
+}
+
+.food-fill  { background: var(--col-food); }
+.water-fill { background: var(--col-water); }
+
+/* Flash when critically low */
+.meter-fill.low {
+  animation: meter-blink 0.45s step-start infinite;
+}
+@keyframes meter-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* ── Action buttons ────────────────────────────────────────── */
+.hamster-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  flex: 1;
+  font-size: 6px;
+  padding: 5px 2px;
+  outline-width: 2px;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.feed-btn:hover:not(:disabled)    { outline-color: var(--col-food);    color: var(--col-food); }
+.hydrate-btn:hover:not(:disabled) { outline-color: var(--col-water);   color: var(--col-water); }
+.poke-btn:hover:not(:disabled)    { outline-color: var(--col-work);    color: var(--col-work); }
+
+/* ── Floating energy pop ───────────────────────────────────── */
+.energy-pop {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 7px;
+  color: var(--col-energy);
+  pointer-events: none;
+  z-index: 30;
+  animation: float-up 0.85s ease-out forwards;
+}
+
+@keyframes float-up {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-22px); }
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  h1              { font-size: 9px; }
+  #energy-count   { font-size: 16px; }
+  .hamster-card   { width: 160px; }
+}
