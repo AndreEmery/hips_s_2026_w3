@@ -4,8 +4,6 @@ import {
   state,
   addStartingHamster,
   buyHamster,
-  buyAutomater,
-  toggleAutomater,
   tick,
 } from './game-state.js';
 
@@ -23,26 +21,15 @@ setInterval(() => {
   renderAll();
 }, 1000);
 
-// ─── Shop buttons ────────────────────────────────────────────────────────────
+// ─── Shop: buy hamster ───────────────────────────────────────────────────────
 
 document.getElementById('buy-hamster-btn').addEventListener('click', () => {
   buyHamster();
   renderAll();
 });
 
-document.getElementById('buy-automater-btn').addEventListener('click', () => {
-  buyAutomater();
-  renderAll();
-});
-
-document.getElementById('toggle-automater-btn').addEventListener('click', () => {
-  toggleAutomater();
-  renderAll();
-});
-
 // ─── Hamster action buttons (event delegation on the grid) ───────────────────
-//
-// All three action buttons carry data-id so a single listener handles everything.
+// Automator buttons are created and wired directly in ui.js (renderAutomatorSlot).
 
 document.getElementById('hamster-grid').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-id]');

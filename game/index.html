@@ -25,25 +25,18 @@
     </div>
 
     <div id="shop">
-      <!-- Always visible; disabled when energy < 10 -->
-      <button id="buy-hamster-btn">
-        HIRE HAMSTER<br />
-        <span style="color:#ffd700">[ 10 ⚡ ]</span>
-      </button>
-
-      <!--
-        Visible after buying 4 hamsters; hidden once owned.
-        Price: 50 ⚡ (not specified in spec — adjust as desired).
-      -->
-      <button id="buy-automater-btn" class="hidden">
-        BUY AUTOMATER<br />
-        <span style="color:#ffd700">[ 50 ⚡ ]</span>
-      </button>
-
-      <!-- Replaces buy button once automater is owned -->
-      <button id="toggle-automater-btn" class="hidden">AUTOMATER: OFF</button>
+      <!-- Price label is updated dynamically by ui.js (exponential scaling) -->
+      <button id="buy-hamster-btn">HIRE HAMSTER<br /><span style="color:#ffd700">[ 10⚡ ]</span></button>
+      <!-- Automator buy/toggle buttons are injected here by ui.js as they unlock -->
+      <div id="automator-shop"></div>
     </div>
   </header>
+
+  <!-- Appears once the hamster-buyer automator is purchased -->
+  <div id="replaced-banner" class="hidden">
+    <span class="replaced-text">⚠ YOU HAVE BEEN REPLACED ⚠</span>
+    <p class="replaced-sub">THE MACHINES NEED YOU NO LONGER.</p>
+  </div>
 
   <!-- Hamster cards are injected here by ui.js -->
   <main id="hamster-grid"></main>

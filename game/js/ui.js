@@ -1,6 +1,13 @@
 // ui.js — Pure DOM rendering. No game logic here.
 
-import { state } from './game-state.js';
+import {
+  state,
+  AUTOMATOR_CONFIG,
+  nextHamsterPrice,
+  isAutomatorUnlocked,
+  buyAutomator,
+  toggleAutomator,
+} from './game-state.js';
 
 // ─── Top-level render ────────────────────────────────────────────────────────
 
@@ -8,6 +15,7 @@ export function renderAll() {
   renderEnergy();
   renderShop();
   renderHamsters();
+  renderReplacedBanner();
 }
 
 // ─── Energy display ──────────────────────────────────────────────────────────
@@ -16,30 +24,72 @@ function renderEnergy() {
   document.getElementById('energy-count').textContent = Math.floor(state.energy);
 }
 
-// ─── Shop buttons ────────────────────────────────────────────────────────────
+// ─── Shop ────────────────────────────────────────────────────────────────────
 
 function renderShop() {
-  // Buy hamster
-  document.getElementById('buy-hamster-btn').disabled = state.energy < 10;
+  // Buy hamster — update price label dynamically
+  const price = nextHamsterPrice();
+  const buyBtn = document.getElementById('buy-hamster-btn');
+  buyBtn.disabled = state.energy < price;
+  buyBtn.innerHTML = `HIRE HAMSTER<br><span style="color:#ffd700">[ ${price}⚡ ]</span>`;
 
-  // Buy automater: visible only after 4 purchases, before ownership
-  const buyAuto = document.getElementById('buy-automater-btn');
-  if (state.automaterUnlocked && !state.automaterOwned) {
-    buyAuto.classList.remove('hidden');
-    buyAuto.disabled = state.energy < 50;
-  } else {
-    buyAuto.classList.add('hidden');
+  // Automator buttons — created on first unlock, updated every render
+  for (const key of Object.keys(AUTOMATOR_CONFIG)) {
+    renderAutomatorSlot(key);
+  }
+}
+
+// Renders (or creates) one automator buy/toggle button.
+function renderAutomatorSlot(key) {
+  const cfg = AUTOMATOR_CONFIG[key];
+  const aut = state.automators[key];
+  const container = document.getElementById('automator-shop');
+  const unlocked = isAutomatorUnlocked(key);
+  let btn = document.getElementById(`auto-btn-${key}`);
+
+  if (!unlocked) {
+    if (btn) btn.classList.add('hidden');
+    return;
   }
 
-  // Toggle: visible only once owned
-  const toggleAuto = document.getElementById('toggle-automater-btn');
-  if (state.automaterOwned) {
-    toggleAuto.classList.remove('hidden');
-    toggleAuto.textContent  = `AUTOMATER: ${state.automaterEnabled ? 'ON' : 'OFF'}`;
-    toggleAuto.dataset.active = state.automaterEnabled;
-  } else {
-    toggleAuto.classList.add('hidden');
+  // Create button once
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = `auto-btn-${key}`;
+    btn.classList.add('auto-btn');
+    container.appendChild(btn);
+    btn.addEventListener('click', () => {
+      if (!aut.owned) buyAutomator(key);
+      else            toggleAutomator(key);
+      renderAll();
+    });
   }
+
+  btn.classList.remove('hidden');
+
+  if (!aut.owned) {
+    // Purchase state
+    btn.dataset.active = 'false';
+    btn.disabled = state.energy < cfg.price;
+    btn.innerHTML =
+      `${cfg.emoji} ${cfg.name} AUTOMATOR<br>` +
+      `<span style="color:#ffd700">[ ${cfg.price}⚡ ]</span>` +
+      `<span class="drain-hint"> -${cfg.drain}⚡/s</span>`;
+  } else {
+    // Toggle state
+    btn.disabled = false;
+    btn.dataset.active = aut.enabled;
+    btn.innerHTML =
+      `${cfg.emoji} ${cfg.name}: ${aut.enabled ? 'ON' : 'OFF'}` +
+      `<span class="drain-hint"> -${cfg.drain}⚡/s</span>`;
+  }
+}
+
+// ─── "You have been replaced" banner ─────────────────────────────────────────
+
+function renderReplacedBanner() {
+  const banner = document.getElementById('replaced-banner');
+  if (state.replaced) banner.classList.remove('hidden');
 }
 
 // ─── Hamster grid ────────────────────────────────────────────────────────────
@@ -56,7 +106,6 @@ function renderHamsters() {
   }
 }
 
-// Build a card element once per hamster (DOM creation is expensive; keep it minimal)
 function buildCard(h) {
   const card = document.createElement('div');
   card.className = 'hamster-card';
@@ -93,23 +142,20 @@ function buildCard(h) {
   return card;
 }
 
-// Update an existing card to reflect current hamster state
 function updateCard(card, h) {
   const stateLower = h.state.toLowerCase();
   card.dataset.state = stateLower;
 
-  // State badge
   const badge = card.querySelector('.state-badge');
   badge.dataset.state = stateLower;
   badge.textContent = h.state === 'EXHAUSTED'
     ? `TIRED (${h.overwork_cooldown}s)`
     : h.state;
 
-  // Emoji
   const emoji = card.querySelector('.hamster-emoji');
   emoji.textContent = h.state === 'EXHAUSTED' ? '😵' : '🐹';
 
-  // Food meter  (max 20)
+  // Food meter (max 20)
   const foodPct = Math.max(0, (h.food_stamina / 20) * 100);
   const foodFill = card.querySelector('.food-fill');
   foodFill.style.width = `${foodPct}%`;
@@ -121,14 +167,11 @@ function updateCard(card, h) {
   waterFill.style.width = `${waterPct}%`;
   waterFill.classList.toggle('low', waterPct < 25);
 
-  // Disable POKE when exhausted (can't wake a recovering hamster)
   card.querySelector('.poke-btn').disabled = h.state === 'EXHAUSTED';
 
-  // +1⚡ pop when actively generating energy
   if (h.state === 'WORKING') spawnEnergyPop(card);
 }
 
-// Spawn a floating "+1⚡" label over the card — auto-removes via animationend
 function spawnEnergyPop(card) {
   const pop = document.createElement('span');
   pop.className = 'energy-pop';
