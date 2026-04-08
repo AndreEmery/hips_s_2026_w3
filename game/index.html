@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚡ Hamster Power Plant</title>
+
+  <!-- Pixel font from Google Fonts (no local assets needed) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>⚡ HAMSTER POWER PLANT ⚡</h1>
+    <p class="subtitle">A DIVISION OF LABOR SIMULATION — WEEK 3</p>
+
+    <div id="energy-bar">
+      <span class="label">ENERGY:</span>
+      <span id="energy-count">0</span>
+      <span class="unit">⚡</span>
+    </div>
+
+    <div id="shop">
+      <!-- Always visible; disabled when energy < 10 -->
+      <button id="buy-hamster-btn">
+        HIRE HAMSTER<br />
+        <span style="color:#ffd700">[ 10 ⚡ ]</span>
+      </button>
+
+      <!--
+        Visible after buying 4 hamsters; hidden once owned.
+        Price: 50 ⚡ (not specified in spec — adjust as desired).
+      -->
+      <button id="buy-automater-btn" class="hidden">
+        BUY AUTOMATER<br />
+        <span style="color:#ffd700">[ 50 ⚡ ]</span>
+      </button>
+
+      <!-- Replaces buy button once automater is owned -->
+      <button id="toggle-automater-btn" class="hidden">AUTOMATER: OFF</button>
+    </div>
+  </header>
+
+  <!-- Hamster cards are injected here by ui.js -->
+  <main id="hamster-grid"></main>
+
+  <!--
+    ═══════════════════════════════════════════════════════════
+    SPRITE SWAP GUIDE
+    ───────────────────────────────────────────────────────────
+    The game uses emoji (🐹 / 😵) as placeholders.
+    To swap in real 8-bit sprites:
+
+    1. Add your image files to game/assets/
+         hamster-idle.gif      ← 🐹 sitting still
+         hamster-working.gif   ← 🐹 running (animated)
+         hamster-exhausted.gif ← 🐹 collapsed
+
+    2. In game/js/ui.js → updateCard(), replace:
+         emoji.textContent = '🐹' / '😵'
+       with:
+         emoji.innerHTML = `<img src="../assets/hamster-${stateLower}.gif"
+                                 alt="${h.state}" class="hamster-sprite-img" />`
+
+    3. Add to style.css:
+         .hamster-sprite-img {
+           width: 48px;
+           height: 48px;
+           image-rendering: pixelated;
+         }
+
+    Good free sources:
+      • https://opengameart.org  (search "hamster" or "animal pixel")
+      • https://itch.io/game-assets/free (filter: pixel art)
+    Or generate with Stable Diffusion / DALL-E using prompt:
+      "8-bit pixel art hamster running in wheel, transparent background"
+    ═══════════════════════════════════════════════════════════
+  -->
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
