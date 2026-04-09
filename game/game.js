@@ -58,9 +58,9 @@ class Hamster {
 // ═══════════════════════════════════════════════════════════════
 
 const AUTOMATOR_CONFIG = {
-  poke:    { emoji: '👆', name: 'POKE',         price:   20, drain:  1, unlockAt:  4 },
-  hydrate: { emoji: '💧', name: 'HYDRATE',       price:  50, drain:  2, unlockAt:  7 },
-  feed:    { emoji: '🍎', name: 'FEED',          price:  100, drain: 5, unlockAt: 13 },
+  poke:    { emoji: '👆', name: 'POKE',         price:   20, drain:  1, unlockAt:  3 },
+  hydrate: { emoji: '💧', name: 'HYDRATE',       price:  50, drain:  2, unlockAt:  6 },
+  feed:    { emoji: '🍎', name: 'FEED',          price:  100, drain: 5, unlockAt: 10 },
   buy:     { emoji: '🐹', name: 'HAMSTER BUYER', price: 300, drain: 10, unlockAt: null },
 };
 
