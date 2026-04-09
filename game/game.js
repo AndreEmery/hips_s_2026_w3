@@ -59,9 +59,9 @@ class Hamster {
 
 const AUTOMATOR_CONFIG = {
   poke:    { emoji: '👆', name: 'POKE',         price:   40, drain:  1, unlockAt:  4 },
-  hydrate: { emoji: '💧', name: 'HYDRATE',       price:  100, drain:  3, unlockAt:  8 },
-  feed:    { emoji: '🍎', name: 'FEED',          price:  500, drain: 10, unlockAt: 20 },
-  buy:     { emoji: '🐹', name: 'HAMSTER BUYER', price: 5000, drain: 20, unlockAt: null },
+  hydrate: { emoji: '💧', name: 'HYDRATE',       price:  100, drain:  3, unlockAt:  7 },
+  feed:    { emoji: '🍎', name: 'FEED',          price:  200, drain: 10, unlockAt: 13 },
+  buy:     { emoji: '🐹', name: 'HAMSTER BUYER', price: 500, drain: 20, unlockAt: null },
 };
 
 const state = {
@@ -79,7 +79,7 @@ const state = {
 };
 
 function nextHamsterPrice() {
-  return Math.round(10 * Math.pow(1.07, state.hamstersBought));
+  return Math.round(10 * Math.pow(1.04, state.hamstersBought));
 }
 
 function isAutomatorUnlocked(key) {
