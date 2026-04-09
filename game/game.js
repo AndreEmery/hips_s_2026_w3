@@ -205,6 +205,12 @@ function renderAutomatorSlot(key) {
       `${cfg.emoji} ${cfg.name}: ${aut.enabled ? 'ON' : 'OFF'}` +
       `<span class="drain-hint"> -${cfg.drain}⚡/s</span>`;
   }
+  console.log(
+  key,
+  'hamsters.length =', state.hamsters.length,
+  'unlockAt =', AUTOMATOR_CONFIG[key].unlockAt,
+  'unlocked =', isAutomatorUnlocked(key)
+);
 }
 
 function renderReplacedBanner() {
