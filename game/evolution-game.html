@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Dangerous Average</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: #aaa;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .header .instruction {
+            font-size: 0.95rem;
+            color: #bbb;
+            line-height: 1.5;
+        }
+
+        .legend {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .legend h3 {
+            font-size: 0.9rem;
+            color: #4ecdc4;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend p {
+            margin-bottom: 0.5rem;
+            color: #aaa;
+        }
+
+        .control-description {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
+            font-style: italic;
+            line-height: 1.3;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 2rem;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .sim-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 600px;
+            background: #0a0a0a;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            cursor: crosshair;
+        }
+
+        .stats-panel {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4ecdc4;
+        }
+
+        .stat-value.danger {
+            color: #ff6b6b;
+        }
+
+        .controls-container {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-value {
+            color: #4ecdc4;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #2a2a2a;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4ecdc4;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #4ecdc4;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .button {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(78, 205, 196, 0.2);
+            border: 2px solid #4ecdc4;
+            color: #4ecdc4;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button:hover {
+            background: rgba(78, 205, 196, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .button.danger {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .button.danger:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .warning-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .warning-box.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .warning-box h2 {
+            color: #ff6b6b;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .warning-box p {
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .controls-container {
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>The Dangerous Average</h1>
+        <p class="subtitle">A critique of Quetelet's "average man" through evolutionary simulation</p>
+        <p class="instruction">
+            Watch as a population evolves. Low mutation creates uniformity—but uniformity is fragile.
+            When catastrophe strikes, diversity is survival.
+        </p>
+    </div>
+
+    <div class="main-container">
+        <div class="sim-container">
+            <canvas id="canvas"></canvas>
+            <div class="stats-panel">
+                <div class="stat">
+                    <div class="stat-label">Population</div>
+                    <div class="stat-value" id="population">100</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Generation</div>
+                    <div class="stat-value" id="generation">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Avg Resistance</div>
+                    <div class="stat-value" id="avgResistance">5.0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Avg Speed</div>
+                    <div class="stat-value" id="avgSpeed">5.0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Avg Size</div>
+                    <div class="stat-value" id="avgSize">5.0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Avg Whiskers</div>
+                    <div class="stat-value" id="avgWhiskers">5.0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Diversity Index</div>
+                    <div class="stat-value" id="diversity">0.0</div>
+                </div>
+            </div>
+            <div class="legend">
+                <h3>Legend</h3>
+                <p><strong>Blob Color:</strong> Red = low toxin resistance, Blue = high resistance</p>
+                <p><strong>Whiskers:</strong> Lines from blobs to food show detection range. Longer whiskers = farther detection</p>
+                <p><strong>Stars:</strong> Food blobs. Size determines energy value and which blobs can eat them</p>
+            </div>
+        </div>
+
+        <div class="controls-container">
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Toxin Level</span>
+                    <span class="control-value" id="toxinValue">0.0</span>
+                </div>
+                <input type="range" id="toxinSlider" min="0" max="10" value="0" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Food Quantity</span>
+                    <span class="control-value" id="foodQuantityValue">0.5</span>
+                </div>
+                <input type="range" id="foodQuantitySlider" min="0.1" max="1" value="0.5" step="0.05">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Mutation Rate</span>
+                    <span class="control-value" id="mutationValue">0.5</span>
+                </div>
+                <input type="range" id="mutationSlider" min="0" max="1" value="0.5" step="0.05">
+                <div class="control-description">
+                    How much traits change from parent to offspring. Higher = more variation.
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Averaging Pressure</span>
+                    <span class="control-value" id="averagingValue">0.0</span>
+                </div>
+                <input type="range" id="averagingSlider" min="0" max="1" value="0" step="0.05">
+                <div class="control-description">
+                    Quetelet's vision: offspring inherit population average instead of parent traits. At 1.0, all deviation is eliminated.
+                </div>
+            </div>
+
+            <button class="button" onclick="reset()">Reset Simulation</button>
+            <button class="button danger" onclick="catastrophe()">Trigger Catastrophe</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="warning-box" id="warningBox">
+        <h2>Extinction Event</h2>
+        <p>The population has died out.</p>
+        <p><strong>This is what happens when we eliminate deviation.</strong></p>
+        <p>Quetelet believed that deviation from the average should be culled, that the "average man" was the ideal. But evolution teaches us that diversity—deviation from the mean—is what allows populations to survive catastrophic change.</p>
+        <p>Without variation, a single environmental shift can destroy everything.</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = 600;
+
+        // Simulation state
+        let blobs = [];
+        let foodDots = [];
+        let generation = 1;
+        let mutationRate = 0.5;
+        let toxinLevel = 0;
+        let foodQuantity = 0.5;
+        let averagingPressure = 0;
+        let frameCount = 0;
+
+        class Blob {
+            constructor(x, y, params = {}) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+
+                // Parameters (1-10 scale)
+                this.toxinResistance = params.toxinResistance || Math.random() * 10;
+                this.speed = params.speed || Math.random() * 10;
+                this.size = params.size || Math.random() * 10;
+                this.whiskerLength = params.whiskerLength || Math.random() * 10;
+
+                this.energy = 500;
+                this.maxEnergy = 1000;
+                this.targetFood = null;
+            }
+
+            getEnergyCost() {
+                // Energy cost per frame - size and toxin resistance cost more
+                return 0.1 + (this.speed / 20) + (this.whiskerLength / 50) + (this.size / 15) + (this.toxinResistance / 12);
+            }
+
+            update() {
+                // Energy decay
+                this.energy -= this.getEnergyCost();
+
+                // Death from toxin
+                const deathProb = Math.max(0, (toxinLevel - this.toxinResistance) / 10);
+                if (Math.random() < deathProb * 0.01) {
+                    return false; // Die
+                }
+
+                // Death from starvation
+                if (this.energy <= 0) {
+                    return false;
+                }
+
+                // Look for food
+                this.targetFood = this.findNearestFood();
+
+                if (this.targetFood) {
+                    // Beeline towards food
+                    const dx = this.targetFood.x - this.x;
+                    const dy = this.targetFood.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist > 0) {
+                        const speed = this.speed / 5;
+                        this.vx = (dx / dist) * speed;
+                        this.vy = (dy / dist) * speed;
+                    }
+
+                    // Check if can eat
+                    if (dist < 10 && this.targetFood.size <= this.size) {
+                        this.energy = Math.min(this.maxEnergy, this.energy + this.targetFood.size * 100);
+                        const index = foodDots.indexOf(this.targetFood);
+                        if (index > -1) {
+                            foodDots.splice(index, 1);
+                        }
+                        this.targetFood = null;
+                    }
+                } else {
+                    // Random walk
+                    this.vx += (Math.random() - 0.5) * 0.5;
+                    this.vy += (Math.random() - 0.5) * 0.5;
+                }
+
+                // Limit speed
+                const maxSpeed = this.speed / 3;
+                const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (currentSpeed > maxSpeed) {
+                    this.vx = (this.vx / currentSpeed) * maxSpeed;
+                    this.vy = (this.vy / currentSpeed) * maxSpeed;
+                }
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wrap around edges
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+
+                return true; // Still alive
+            }
+
+            findNearestFood() {
+                let nearest = null;
+                let minDist = this.whiskerLength * 20;
+
+                for (let food of foodDots) {
+                    if (food.size > this.size) continue; // Can't eat it
+
+                    const dx = food.x - this.x;
+                    const dy = food.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = food;
+                    }
+                }
+
+                return nearest;
+            }
+
+            split() {
+                if (this.energy >= 1000) {
+                    this.energy = 500;
+
+                    // Calculate population averages
+                    let avgToxinResistance = 0, avgSpeed = 0, avgSize = 0, avgWhiskerLength = 0;
+                    if (blobs.length > 0) {
+                        for (let b of blobs) {
+                            avgToxinResistance += b.toxinResistance;
+                            avgSpeed += b.speed;
+                            avgSize += b.size;
+                            avgWhiskerLength += b.whiskerLength;
+                        }
+                        avgToxinResistance /= blobs.length;
+                        avgSpeed /= blobs.length;
+                        avgSize /= blobs.length;
+                        avgWhiskerLength /= blobs.length;
+                    }
+
+                    // Create offspring with mutation or averaging
+                    const mutate = (val, avgVal) => {
+                        // Interpolate between parent (with mutation) and population average
+                        const mutated = val + (Math.random() - 0.5) * 2 * mutationRate;
+                        const result = mutated * (1 - averagingPressure) + avgVal * averagingPressure;
+                        return Math.max(0.5, Math.min(10, result));
+                    };
+
+                    const child = new Blob(this.x, this.y, {
+                        toxinResistance: mutate(this.toxinResistance, avgToxinResistance),
+                        speed: mutate(this.speed, avgSpeed),
+                        size: mutate(this.size, avgSize),
+                        whiskerLength: mutate(this.whiskerLength, avgWhiskerLength)
+                    });
+                    child.energy = 500;
+
+                    return child;
+                }
+                return null;
+            }
+
+            draw() {
+                const radius = 3 + (this.size / 5);
+
+                // Color based on toxin resistance - red to blue
+                const hue = (this.toxinResistance / 10) * 240; // 0 (red) to 240 (blue)
+                ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw whiskers based on direction of motion
+                const whiskerLength = (this.whiskerLength / 10) * 15 + 5; // Scale based on whiskerLength trait
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+
+                if (speed > 0.1) {
+                    // Direction angle from velocity
+                    const dirAngle = Math.atan2(this.vy, this.vx);
+                    const whiskerAngles = [-30, -15, 15, 30]; // degrees relative to motion
+
+                    ctx.strokeStyle = `hsl(${hue}, 80%, 70%)`;
+                    ctx.lineWidth = 1.5;
+                    ctx.globalAlpha = 0.8;
+
+                    for (let angle of whiskerAngles) {
+                        const rad = dirAngle + (angle * Math.PI / 180);
+                        const endX = this.x + Math.cos(rad) * whiskerLength;
+                        const endY = this.y + Math.sin(rad) * whiskerLength;
+
+                        ctx.beginPath();
+                        ctx.moveTo(this.x, this.y);
+                        ctx.lineTo(endX, endY);
+                        ctx.stroke();
+                    }
+
+                    ctx.globalAlpha = 1.0;
+                }
+
+                // Draw line to food if targeting
+                if (this.targetFood) {
+                    ctx.strokeStyle = `hsl(${hue}, 60%, 50%)`;
+                    ctx.lineWidth = 1;
+                    ctx.globalAlpha = 0.2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.targetFood.x, this.targetFood.y);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+        }
+
+        class FoodDot {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.ceil(Math.random() * 10);
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 100, 0.6)`;
+
+                // Draw star shape
+                const outerRadius = this.size / 2 + 2;
+                const innerRadius = this.size / 4 + 1;
+                const spikes = 5;
+
+                ctx.beginPath();
+                for (let i = 0; i < spikes * 2; i++) {
+                    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                    const angle = (i * Math.PI) / spikes - Math.PI / 2;
+                    const x = this.x + Math.cos(angle) * radius;
+                    const y = this.y + Math.sin(angle) * radius;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            blobs = [];
+            for (let i = 0; i < 100; i++) {
+                blobs.push(new Blob());
+            }
+
+            foodDots = [];
+            for (let i = 0; i < 50; i++) {
+                foodDots.push(new FoodDot());
+            }
+
+            generation = 1;
+            frameCount = 0;
+        }
+
+        function update() {
+            frameCount++;
+
+            // Update blobs
+            const newBlobs = [];
+            for (let blob of blobs) {
+                if (blob.update()) {
+                    newBlobs.push(blob);
+
+                    // Try to split
+                    const child = blob.split();
+                    if (child) {
+                        newBlobs.push(child);
+                        generation++;
+                    }
+                }
+            }
+            blobs = newBlobs;
+
+            // Spawn food based on quantity
+            if (Math.random() < foodQuantity * 0.5) {
+                foodDots.push(new FoodDot());
+            }
+
+            // Check for extinction
+            if (blobs.length === 0) {
+                showExtinction();
+            }
+
+            updateStats();
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw food
+            for (let food of foodDots) {
+                food.draw();
+            }
+
+            // Draw blobs
+            for (let blob of blobs) {
+                blob.draw();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('population').textContent = blobs.length;
+            document.getElementById('generation').textContent = generation;
+
+            if (blobs.length > 0) {
+                const avgRes = blobs.reduce((sum, b) => sum + b.toxinResistance, 0) / blobs.length;
+                const avgSpeed = blobs.reduce((sum, b) => sum + b.speed, 0) / blobs.length;
+                const avgSize = blobs.reduce((sum, b) => sum + b.size, 0) / blobs.length;
+                const avgWhiskers = blobs.reduce((sum, b) => sum + b.whiskerLength, 0) / blobs.length;
+
+                document.getElementById('avgResistance').textContent = avgRes.toFixed(2);
+                document.getElementById('avgSpeed').textContent = avgSpeed.toFixed(2);
+                document.getElementById('avgSize').textContent = avgSize.toFixed(2);
+                document.getElementById('avgWhiskers').textContent = avgWhiskers.toFixed(2);
+
+                // Calculate diversity (standard deviation of toxin resistance)
+                const mean = avgRes;
+                const variance = blobs.reduce((sum, b) => sum + Math.pow(b.toxinResistance - mean, 2), 0) / blobs.length;
+                const stdDev = Math.sqrt(variance);
+                document.getElementById('diversity').textContent = stdDev.toFixed(2);
+
+                // Warning color for low diversity
+                const diversityEl = document.getElementById('diversity');
+                if (stdDev < 1.0) {
+                    diversityEl.classList.add('danger');
+                } else {
+                    diversityEl.classList.remove('danger');
+                }
+            }
+        }
+
+        function showExtinction() {
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('warningBox').classList.add('show');
+        }
+
+        function hideExtinction() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('warningBox').classList.remove('show');
+        }
+
+        function reset() {
+            hideExtinction();
+            init();
+        }
+
+        function catastrophe() {
+            // Sudden environmental shift
+            toxinLevel = 8;
+            document.getElementById('toxinSlider').value = 8;
+            document.getElementById('toxinValue').textContent = '8.0';
+
+            foodQuantity = 0.1;
+            document.getElementById('foodQuantitySlider').value = 0.1;
+            document.getElementById('foodQuantityValue').textContent = '0.10';
+        }
+
+        // Setup controls
+        document.getElementById('toxinSlider').addEventListener('input', (e) => {
+            toxinLevel = parseFloat(e.target.value);
+            document.getElementById('toxinValue').textContent = toxinLevel.toFixed(1);
+        });
+
+        document.getElementById('foodQuantitySlider').addEventListener('input', (e) => {
+            foodQuantity = parseFloat(e.target.value);
+            document.getElementById('foodQuantityValue').textContent = foodQuantity.toFixed(2);
+        });
+
+        document.getElementById('mutationSlider').addEventListener('input', (e) => {
+            mutationRate = parseFloat(e.target.value);
+            document.getElementById('mutationValue').textContent = mutationRate.toFixed(2);
+        });
+
+        document.getElementById('averagingSlider').addEventListener('input', (e) => {
+            averagingPressure = parseFloat(e.target.value);
+            document.getElementById('averagingValue').textContent = averagingPressure.toFixed(2);
+        });
+
+        document.getElementById('overlay').addEventListener('click', hideExtinction);
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize and start
+        init();
+        gameLoop();
+    </script>
+</body>
+</html>
